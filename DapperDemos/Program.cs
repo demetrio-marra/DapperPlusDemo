@@ -30,7 +30,7 @@ namespace DapperDemos
         void Run()
         {
             // mappatura 
-            DapperPlusManager.Entity<Pratica>().Table("TblPratiche")
+            DapperPlusManager.Entity<Pratica>().Table("TblPraticheDataSource")
                 .Identity(p => p.IdPratica);
 
             var generaDatiTest = true;
@@ -51,8 +51,8 @@ namespace DapperDemos
             {
                 dbConn.Execute("DROP TABLE TblFlussoPraticheMandante");
                 log("Eliminata tabella TblFlussoPraticheMandante");
-                dbConn.Execute("DROP TABLE TblPratiche");
-                log("Eliminata tabella TblPratiche");
+                dbConn.Execute("DROP TABLE TblPraticheDataSource");
+                log("Eliminata tabella TblPraticheDataSource");
             }
         }
                
@@ -98,7 +98,7 @@ namespace DapperDemos
 UPDATE t
 SET IdPratica = P.Idpratica
 FROM {tbName} t
-INNER JOIN TblPratiche P ON P.CodPratica = t.CodPratica
+INNER JOIN TblPraticheDataSource P ON P.CodPratica = t.CodPratica
 ";
                 dbConn.Execute(updQuery);
                 elapsedUpdate = sw.ElapsedMilliseconds - checkpoint;
@@ -165,9 +165,9 @@ INNER JOIN TblPratiche P ON P.CodPratica = t.CodPratica
 
             using (var dbConn = new SqlConnection(connString))
             {
-                var sqlCreateTblPratiche = @"
+                var sqlCreateTblPraticheDataSource = @"
 
-CREATE TABLE [dbo].[TblPratiche] (
+CREATE TABLE [dbo].[TblPraticheDataSource] (
     [IdPratica]  INT             IDENTITY (1, 1) NOT NULL,
     [CodPratica] VARCHAR (50)    NOT NULL,
     [DataIns]    DATETIME        NOT NULL,
@@ -176,21 +176,21 @@ CREATE TABLE [dbo].[TblPratiche] (
 );
 
 
-CREATE NONCLUSTERED INDEX [ix_tblpratiche_codpratica]
-    ON [dbo].[TblPratiche]([CodPratica] ASC);
+CREATE NONCLUSTERED INDEX [ix_TblPraticheDataSource_codpratica]
+    ON [dbo].[TblPraticheDataSource]([CodPratica] ASC);
 ";
-                dbConn.Execute(sqlCreateTblPratiche);
-                log($"Creata TblPratiche");
+                dbConn.Execute(sqlCreateTblPraticheDataSource);
+                log($"Creata TblPraticheDataSource");
                 dbConn.BulkInsert(pratiche);
             }
-            log($"Caricate {pratiche.Count()} pratiche su TblPratiche");
+            log($"Caricate {pratiche.Count()} pratiche su TblPraticheDataSource");
 
             var sql2 = @"
 create table TblFlussoPraticheMandante (idpratica int, codpratica varchar(50), datains datetime, importoa decimal(18,2), note varchar(4000))
 
 INSERT INTO TblFlussoPraticheMandante (Codpratica, datains, importoA, NOTE)
 SELECT Codpratica, datains, importoA, NOTE FROM 
-tblpratiche
+TblPraticheDataSource
 order by IdPratica 
 offset 5000 rows
 FETCH NEXT 30000 rows only
@@ -199,7 +199,7 @@ FETCH NEXT 30000 rows only
 
 INSERT INTO TblFlussoPraticheMandante (Codpratica, datains, importoA, NOTE)
 SELECT Codpratica, datains, importoA, NOTE FROM 
-tblpratiche
+TblPraticheDataSource
 order by IdPratica 
 offset 40000 rows
 FETCH NEXT 30000 rows only
@@ -207,7 +207,7 @@ FETCH NEXT 30000 rows only
 
 INSERT INTO TblFlussoPraticheMandante (Codpratica, datains, importoA, NOTE)
 SELECT Codpratica, datains, importoA, NOTE FROM 
-tblpratiche
+TblPraticheDataSource
 order by IdPratica 
 offset 75000 rows
 FETCH NEXT 10000 rows only
@@ -216,7 +216,7 @@ FETCH NEXT 10000 rows only
             {
                 dbConn.Execute(sql2);
             }
-            log($"Caricate 70.000 pratiche su TblFlussoPraticheMandante (prese da TblPratiche)");
+            log($"Caricate 70.000 pratiche su TblFlussoPraticheMandante (prese da TblPraticheDataSource)");
             log("Preparazione dati per il test completata");
         }
 
