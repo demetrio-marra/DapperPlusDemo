@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
@@ -12,12 +13,13 @@ namespace DapperDemos
 {
     class Program
     {
-        private Random _rnd;
-        string connString = @"Data Source=*********;Initial Catalog=************;Integrated Security=True;Pooling=False";
+        private readonly Random _rnd;
+        private readonly string _connString;
 
         public Program()
         {
             _rnd = new Random(DateTime.Now.Second);
+            _connString = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
         }
 
         static void Main(string[] args)
@@ -47,7 +49,7 @@ namespace DapperDemos
 
         void Cleanup()
         {
-            using (var dbConn = new SqlConnection(connString))
+            using (var dbConn = new SqlConnection(_connString))
             {
                 dbConn.Execute("DROP TABLE TblFlussoPraticheMandante");
                 log("Eliminata tabella TblFlussoPraticheMandante");
@@ -73,7 +75,7 @@ namespace DapperDemos
             long elapsedUpdate = 0;
             long elapsedSelect = 0;
 
-            using (var dbConn = new SqlConnection(connString))
+            using (var dbConn = new SqlConnection(_connString))
             {
 
                 dbConn.Open();
@@ -117,7 +119,7 @@ INNER JOIN TblPraticheDataSource P ON P.CodPratica = t.CodPratica
         {
 
             IEnumerable<Pratica> campione;
-            using (var dbConn = new SqlConnection(connString))
+            using (var dbConn = new SqlConnection(_connString))
             {
                 campione = dbConn.Query<Pratica>("SELECT * FROM TblFlussoPraticheMandante");
             }
@@ -161,9 +163,7 @@ INNER JOIN TblPraticheDataSource P ON P.CodPratica = t.CodPratica
             log($"Generate {pratiche.Count()} pratiche con dati casuali");
 
             // salviamo nel db con dapper
-            var connString = @"Data Source=DESKTOP-RD3CPMC\SQLEXPRESS;Initial Catalog=DapperDemosDb;Integrated Security=True;Pooling=False";
-
-            using (var dbConn = new SqlConnection(connString))
+            using (var dbConn = new SqlConnection(_connString))
             {
                 var sqlCreateTblPraticheDataSource = @"
 
@@ -212,7 +212,7 @@ order by IdPratica
 offset 75000 rows
 FETCH NEXT 10000 rows only
 ";
-            using (var dbConn = new SqlConnection(connString))
+            using (var dbConn = new SqlConnection(_connString))
             {
                 dbConn.Execute(sql2);
             }
